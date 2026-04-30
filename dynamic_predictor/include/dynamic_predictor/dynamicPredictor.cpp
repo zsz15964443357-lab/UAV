@@ -180,6 +180,7 @@ namespace dynamicPredictor{
                 std::vector<std::vector<std::vector<Eigen::Vector3d>>> sizePredTemp;
                 this->predTraj(allPredPointsTemp, posPredTemp, sizePredTemp);
 
+                std::lock_guard<std::mutex> lock(this->predictionMutex_);
                 this->intentProb_ = intentProbTemp;
                 this->posPred_ = posPredTemp;
                 this->sizePred_ = sizePredTemp;
@@ -187,6 +188,7 @@ namespace dynamicPredictor{
             }
         }
         else{
+            std::lock_guard<std::mutex> lock(this->predictionMutex_);
             this->intentProb_.clear();
             this->allPredPoints_.clear();
             this->posPred_.clear();
@@ -852,6 +854,7 @@ namespace dynamicPredictor{
     }
 
     void predictor::getPrediction(std::vector<std::vector<std::vector<Eigen::Vector3d>>> &predPos, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &predSize, std::vector<Eigen::VectorXd> &intentProb){
+        std::lock_guard<std::mutex> lock(this->predictionMutex_);
         if (this->sizePred_.size()){
             predPos = this->posPred_;
             predSize = this->sizePred_;
@@ -865,6 +868,7 @@ namespace dynamicPredictor{
     }
 
     void predictor::getPrediction(std::vector<dynamicPredictor::obstacle> &predOb){
+        std::lock_guard<std::mutex> lock(this->predictionMutex_);
         for (int i=0;i<int(this->posPred_.size());i++){
             dynamicPredictor::obstacle ob;
             ob.posPred = this->posPred_[i];

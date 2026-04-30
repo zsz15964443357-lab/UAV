@@ -1,0 +1,60 @@
+FROM ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Shanghai
+ENV ROS_DISTRO=noetic
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://mirrors.ustc.edu.cn/ubuntu/|g; s|http://security.ubuntu.com/ubuntu/|http://mirrors.ustc.edu.cn/ubuntu/|g' /etc/apt/sources.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+      ca-certificates \
+      curl \
+      gnupg2 \
+      lsb-release \
+      software-properties-common
+
+RUN curl -fsSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add - \
+    && echo "deb http://mirrors.ustc.edu.cn/ros/ubuntu/ focal main" > /etc/apt/sources.list.d/ros1-latest.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+      build-essential \
+      dbus-x11 \
+      git \
+      libeigen3-dev \
+      libgazebo11-dev \
+      libopencv-dev \
+      libpcl-dev \
+      libprotobuf-dev \
+      mesa-utils \
+      protobuf-compiler \
+      python3-catkin-tools \
+      python3-pip \
+      python3-rosdep \
+      python3-rosinstall \
+      python3-rosinstall-generator \
+      python3-vcstool \
+      qtbase5-dev \
+      ros-noetic-desktop-full \
+      ros-noetic-mavros \
+      ros-noetic-mavros-extras \
+      ros-noetic-octomap \
+      ros-noetic-octomap-msgs \
+      ros-noetic-octomap-ros \
+      ros-noetic-octomap-rviz-plugins \
+      ros-noetic-octomap-server \
+      ros-noetic-vision-msgs \
+    && (rosdep init || true) \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN groupadd -g 1000 intent \
+    && useradd -m -u 1000 -g 1000 -s /bin/bash intent \
+    && echo 'source /opt/ros/noetic/setup.bash' >> /home/intent/.bashrc \
+    && echo 'test -f /home/intent/catkin_ws/devel/setup.bash && source /home/intent/catkin_ws/devel/setup.bash' >> /home/intent/.bashrc \
+    && chown intent:intent /home/intent/.bashrc
+
+USER intent
+WORKDIR /home/intent/catkin_ws
+
+CMD ["/bin/bash"]

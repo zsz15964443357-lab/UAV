@@ -5,6 +5,8 @@
 */
 
 #include <tracking_controller/trackingController.h>
+#include <cmath>
+#include <limits>
 
 namespace controller{
 	trackingController::trackingController(const ros::NodeHandle& nh) : nh_(nh){
@@ -251,6 +253,10 @@ namespace controller{
 		Eigen::Vector4d attitudeRefQuat;
 		Eigen::Vector3d accRef;
 		this->computeAttitudeAndAccRef(attitudeRefQuat, accRef);
+		if (not accRef.allFinite() or not attitudeRefQuat.allFinite()){
+			this->targetReceived_ = false;
+			return;
+		}
 
 		
 		if (this->bodyRateControl_){
@@ -445,6 +451,9 @@ namespace controller{
 			ros::Time currTime = ros::Time::now();
 			this->deltaTime_ = (currTime - this->prevTime_).toSec();
 			this->prevTime_ = currTime;
+			if (not std::isfinite(this->deltaTime_) or this->deltaTime_ <= 1e-5){
+				this->deltaTime_ = 0.0;
+			}
 		}
 
 		// 1. target acceleration
@@ -459,6 +468,12 @@ namespace controller{
 		Eigen::Vector3d currVel = currRot * currVelBody;
 		Eigen::Vector3d targetPos (this->target_.position.x, this->target_.position.y, this->target_.position.z);
 		Eigen::Vector3d targetVel (this->target_.velocity.x, this->target_.velocity.y, this->target_.velocity.z);
+		Eigen::Vector3d targetAcc (this->target_.acceleration.x, this->target_.acceleration.y, this->target_.acceleration.z);
+		if (not currPos.allFinite() or not currVelBody.allFinite() or not currVel.allFinite() or not targetPos.allFinite() or not targetVel.allFinite() or not targetAcc.allFinite()){
+			accRef.setConstant(std::numeric_limits<double>::quiet_NaN());
+			attitudeRefQuat.setConstant(std::numeric_limits<double>::quiet_NaN());
+			return;
+		}
 		Eigen::Vector3d positionError = targetPos - currPos;
 		Eigen::Vector3d velocityError = targetVel - currVel;
 		this->posErrorInt_ += this->deltaTime_ * positionError; 
@@ -469,8 +484,16 @@ namespace controller{
 			this->firstTime_ = false;
 		}
 		else{
-			this->deltaPosError_ = (positionError - this->prevPosError_)/this->deltaTime_; this->prevPosError_ = positionError;
-			this->deltaVelError_ = (velocityError - this->prevVelError_)/this->deltaTime_; this->prevVelError_ = velocityError;
+			if (this->deltaTime_ > 0.0){
+				this->deltaPosError_ = (positionError - this->prevPosError_)/this->deltaTime_;
+				this->deltaVelError_ = (velocityError - this->prevVelError_)/this->deltaTime_;
+			}
+			else{
+				this->deltaPosError_ = Eigen::Vector3d (0.0, 0.0, 0.0);
+				this->deltaVelError_ = Eigen::Vector3d (0.0, 0.0, 0.0);
+			}
+			this->prevPosError_ = positionError;
+			this->prevVelError_ = velocityError;
 		}
 		
 		// mask out the velocity input if needed

@@ -13,6 +13,7 @@
 #include <onboard_detector/fakeDetector.h>
 #include <map_manager/dynamicMap.h>
 #include <dynamic_predictor/utils.h>
+#include <mutex>
 
 namespace dynamicPredictor{
     class predictor{
@@ -60,6 +61,7 @@ namespace dynamicPredictor{
         std::vector<std::vector<std::vector<Eigen::Vector3d>>> posPred_;
         std::vector<std::vector<std::vector<Eigen::Vector3d>>> sizePred_;
         std::vector<Eigen::VectorXd> intentProb_;
+        std::mutex predictionMutex_;
 
     public:
         predictor(const ros::NodeHandle& nh);

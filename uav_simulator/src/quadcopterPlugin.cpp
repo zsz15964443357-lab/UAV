@@ -275,6 +275,12 @@ void DroneSimpleController::CmdCallback(const geometry_msgs::TwistStampedConstPt
 
 void DroneSimpleController::CmdAccCallback(const mavros_msgs::PositionTargetConstPtr& cmd_acc_msg)
 {
+  if (!std::isfinite(cmd_acc_msg->acceleration_or_force.x) or
+      !std::isfinite(cmd_acc_msg->acceleration_or_force.y) or
+      !std::isfinite(cmd_acc_msg->acceleration_or_force.z) or
+      !std::isfinite(cmd_acc_msg->yaw)){
+    return;
+  }
   cmd_acc = *cmd_acc_msg;
   m_posCtrl = false;
   acc_control = true;

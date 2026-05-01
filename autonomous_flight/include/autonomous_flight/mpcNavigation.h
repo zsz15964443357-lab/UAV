@@ -17,6 +17,9 @@
 #include <trajectory_planner/piecewiseLinearTraj.h>
 #include <trajectory_planner/bsplineTraj.h>
 #include <trajectory_planner/mpcPlanner.h>
+#include <multimodal_uncertainty/UncertaintyObstacleArray.h>
+
+#include <mutex>
 
 namespace AutoFlight{
 
@@ -41,6 +44,7 @@ namespace AutoFlight{
 		ros::Publisher mpcTrajPub_;
 		ros::Publisher inputTrajPub_;
 		ros::Publisher goalPub_;
+		ros::Subscriber uncertaintyObstacleSub_;
 
 		std::thread mpcWorker_;
 
@@ -58,6 +62,13 @@ namespace AutoFlight{
 		nav_msgs::Path predefinedGoal_;
 		int goalIdx_ = 0;
 		int repeatPathNum_;
+		std::string dynamicObstacleMode_;
+		std::string uncertaintyObstaclesTopic_;
+		std::string uncertaintySizeMode_;
+		double fixedSafetyMargin_;
+		double uncertaintyMaxAge_;
+		double uncertaintyAssociationDistance_;
+		bool uncertaintyFallbackToOriginal_;
 
 		// navigation data
 		bool mpcReplan_ = false;
@@ -81,6 +92,23 @@ namespace AutoFlight{
 		bool firstTimeSave_ = false;
 		bool lastDynamicObstacle_ = false;
 		ros::Time lastDynamicObstacleTime_;
+		std::mutex uncertaintyObstacleMutex_;
+		multimodal_uncertainty::UncertaintyObstacleArray latestUncertaintyObstacles_;
+		bool uncertaintyObstaclesReady_ = false;
+		ros::Time lastUncertaintyObstacleTime_;
+
+		bool isFixedMarginMode();
+		bool isUncertaintyAwareMode();
+		void uncertaintyObstaclesCB(const multimodal_uncertainty::UncertaintyObstacleArrayConstPtr& msg);
+		bool getLatestUncertaintyObstacles(multimodal_uncertainty::UncertaintyObstacleArray& msg);
+		bool getUncertaintyDynamicObstacles(std::vector<Eigen::Vector3d>& obstaclesPos, std::vector<Eigen::Vector3d>& obstaclesVel, std::vector<Eigen::Vector3d>& obstaclesSize);
+		void getPlannerDynamicObstacles(std::vector<Eigen::Vector3d>& obstaclesPos, std::vector<Eigen::Vector3d>& obstaclesVel, std::vector<Eigen::Vector3d>& obstaclesSize);
+		void inflateCurrentObstacleSizes(std::vector<Eigen::Vector3d>& obstaclesSize);
+		void applyPlannerModeToPredictions(std::vector<std::vector<std::vector<Eigen::Vector3d>>>& predPos, std::vector<std::vector<std::vector<Eigen::Vector3d>>>& predSize);
+		void inflatePredictedObstacleSizes(std::vector<std::vector<std::vector<Eigen::Vector3d>>>& predSize);
+		bool findUncertaintyMatch(const Eigen::Vector3d& pos, const multimodal_uncertainty::UncertaintyObstacleArray& uncertaintyMsg, int& matchIdx);
+		Eigen::Vector3d inflateSizeByFixedMargin(const Eigen::Vector3d& size);
+		Eigen::Vector3d inflateSizeByEffectiveRadius(const Eigen::Vector3d& size, double radius, double effectiveRadius);
 		
 	public:
 		mpcNavigation(const ros::NodeHandle& nh);

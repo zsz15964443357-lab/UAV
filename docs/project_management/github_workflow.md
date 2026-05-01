@@ -14,8 +14,8 @@ The `main` branch currently stores the high-level research plan. The reproductio
 - `stage2-experiment-logging`: stage 2 experiment logging package, CSV schema, summary, and plotting scripts.
 - `stage3-perception-degradation`: stage 3 perception degradation node, degraded obstacle messages, RViz markers, and CSV samples.
 - `stage4-multimodal-uncertainty`: stage 4 uncertainty obstacle messages, effective-radius calculation, RViz risk radius markers, and CSV samples.
+- `stage5-safety-local-planner`: stage 5 planner integration for original, fixed-margin, and uncertainty-aware dynamic obstacle modes.
 - Future branches:
-  - `stage5-safety-local-planner`
   - `stage6-paper-experiment-matrix`
   - `stage7-paper-materials`
 
@@ -44,12 +44,14 @@ Closed milestones:
 - `Stage 1 - Intent-MPC Data Flow`
 - `Stage 2 - Experiment Logging`
 - `Stage 3 - Perception Degradation`
+- `Stage 4 - Multimodal Uncertainty`
+- `Stage 5 - Safety Local Planner`
 
 Current active milestone:
 
-- `Stage 4 - Multimodal Uncertainty`
+- `Stage 6 - Paper Experiment Matrix`
 
-Stage 4 scope is deliberately limited to uncertainty representation and visualization. Planner consumption of `effective_radius` remains reserved for Stage 5.
+Stage 5 implemented dynamic-obstacle size inflation for fixed-margin and uncertainty-aware modes. Risk-cost terms inside MPC remain a later refinement after validating the radius-inflation baseline.
 
 ## GitHub Issues
 

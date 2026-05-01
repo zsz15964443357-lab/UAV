@@ -11,9 +11,9 @@ The `main` branch currently stores the high-level research plan. The reproductio
 - `main`: stable project overview, roadmap, and accepted stage summaries.
 - `stage0-reproduction-stability`: stage 0 reproduction, Docker/ROS Noetic environment, runtime stability fixes, and validation report.
 - `stage1-code-reading-baseline`: stage 1 code-reading branch for Intent-MPC data flow, ROS interfaces, and algorithm insertion-point analysis.
+- `stage2-experiment-logging`: stage 2 experiment logging package, CSV schema, summary, and plotting scripts.
+- `stage3-perception-degradation`: stage 3 perception degradation node, degraded obstacle messages, RViz markers, and CSV samples.
 - Future branches:
-  - `stage2-experiment-logging`
-  - `stage3-perception-degradation`
   - `stage4-multimodal-uncertainty`
   - `stage5-safety-local-planner`
   - `stage6-paper-experiment-matrix`
@@ -38,7 +38,17 @@ Created milestones:
 - `Stage 6 - Paper Experiment Matrix`
 - `Stage 7 - Paper Materials`
 
-`Stage 0 - Reproduction` is closed because the official demo was reproduced and validated on this machine.
+Closed milestones:
+
+- `Stage 0 - Reproduction`
+- `Stage 1 - Intent-MPC Data Flow`
+- `Stage 2 - Experiment Logging`
+
+Current active milestone:
+
+- `Stage 3 - Perception Degradation`
+
+Stage 3 scope is deliberately limited to an external degraded perception stream. Planner consumption of degraded/uncertain obstacles remains reserved for Stage 5.
 
 ## GitHub Issues
 
@@ -77,4 +87,3 @@ Before merging stage work into `main`, decide how to reconcile this:
 2. Update `main` to the full codebase plus the project roadmap.
 
 This is tracked in [#18](https://github.com/zsz15964443357-lab/UAV/issues/18).
-

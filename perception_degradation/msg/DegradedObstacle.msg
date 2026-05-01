@@ -1,0 +1,13 @@
+std_msgs/Header header
+uint32 id
+string label
+geometry_msgs/Point position
+geometry_msgs/Vector3 velocity
+geometry_msgs/Vector3 size
+float64 radius
+float64 confidence
+float64 position_noise_std
+float64 velocity_noise_std
+float64 delay_ms
+bool is_false_positive
+string source_modalities

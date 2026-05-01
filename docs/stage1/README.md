@@ -37,14 +37,18 @@ Reason: stage 0 already contains the working Docker/ROS Noetic reproduction envi
 ## Initial Artifacts
 
 - [`initial_dataflow_map.md`](initial_dataflow_map.md): first-pass map of launch files, modules, topics, data structures, and insertion-point candidates.
+- [`stage1_execution_prompt.md`](stage1_execution_prompt.md): reusable prompt for reproducing or extending Stage 1 analysis.
+- [`stage1_final_report.md`](stage1_final_report.md): final Stage 1 dataflow report with file/function evidence.
+- [`insertion_point_design.md`](insertion_point_design.md): ranked uncertainty-aware planning insertion-point design.
 
 ## Acceptance Checklist
 
-- [ ] Launch tree and runtime node graph documented.
-- [ ] UAV pose/velocity/control/planning topics documented.
-- [ ] Dynamic obstacle generation path documented.
-- [ ] `dynamic_predictor` input/output format documented.
-- [ ] MPC dynamic obstacle constraint path documented.
-- [ ] Candidate uncertainty insertion points ranked.
-- [ ] Stage 1 final report completed.
+- [x] Launch tree and runtime node graph documented.
+- [x] UAV pose/velocity/control/planning topics documented.
+- [x] Dynamic obstacle generation path documented.
+- [x] `dynamic_predictor` input/output format documented.
+- [x] MPC dynamic obstacle constraint path documented.
+- [x] Candidate uncertainty insertion points ranked.
+- [x] Stage 1 final report completed.
 
+Conclusion: Stage 1 acceptance criteria are met. Next recommended branch is `stage2-experiment-logging`.

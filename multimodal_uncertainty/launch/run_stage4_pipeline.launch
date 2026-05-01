@@ -1,0 +1,33 @@
+<launch>
+  <arg name="output_dir" default="$(env HOME)/catkin_ws/experiment_logs" />
+  <arg name="position_noise_std" default="0.1" />
+  <arg name="velocity_noise_std" default="0.2" />
+  <arg name="delay_ms" default="100.0" />
+  <arg name="dropout_prob" default="0.1" />
+  <arg name="false_positive_prob" default="0.05" />
+  <arg name="confidence_noise" default="0.1" />
+  <arg name="random_seed" default="1" />
+  <arg name="alpha" default="1.0" />
+  <arg name="beta" default="0.5" />
+  <arg name="gamma" default="0.002" />
+  <arg name="delta" default="0.8" />
+
+  <include file="$(find perception_degradation)/launch/run_degradation.launch">
+    <arg name="output_dir" value="$(arg output_dir)" />
+    <arg name="position_noise_std" value="$(arg position_noise_std)" />
+    <arg name="velocity_noise_std" value="$(arg velocity_noise_std)" />
+    <arg name="delay_ms" value="$(arg delay_ms)" />
+    <arg name="dropout_prob" value="$(arg dropout_prob)" />
+    <arg name="false_positive_prob" value="$(arg false_positive_prob)" />
+    <arg name="confidence_noise" value="$(arg confidence_noise)" />
+    <arg name="random_seed" value="$(arg random_seed)" />
+  </include>
+
+  <include file="$(find multimodal_uncertainty)/launch/run_uncertainty.launch">
+    <arg name="output_dir" value="$(arg output_dir)" />
+    <arg name="alpha" value="$(arg alpha)" />
+    <arg name="beta" value="$(arg beta)" />
+    <arg name="gamma" value="$(arg gamma)" />
+    <arg name="delta" value="$(arg delta)" />
+  </include>
+</launch>

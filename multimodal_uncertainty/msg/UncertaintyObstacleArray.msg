@@ -1,0 +1,9 @@
+std_msgs/Header header
+UncertaintyObstacle[] obstacles
+uint32 raw_obstacle_count
+uint32 dropped_obstacle_count
+uint32 false_positive_count
+float64 alpha
+float64 beta
+float64 gamma
+float64 delta

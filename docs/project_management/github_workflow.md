@@ -13,8 +13,8 @@ The `main` branch currently stores the high-level research plan. The reproductio
 - `stage1-code-reading-baseline`: stage 1 code-reading branch for Intent-MPC data flow, ROS interfaces, and algorithm insertion-point analysis.
 - `stage2-experiment-logging`: stage 2 experiment logging package, CSV schema, summary, and plotting scripts.
 - `stage3-perception-degradation`: stage 3 perception degradation node, degraded obstacle messages, RViz markers, and CSV samples.
+- `stage4-multimodal-uncertainty`: stage 4 uncertainty obstacle messages, effective-radius calculation, RViz risk radius markers, and CSV samples.
 - Future branches:
-  - `stage4-multimodal-uncertainty`
   - `stage5-safety-local-planner`
   - `stage6-paper-experiment-matrix`
   - `stage7-paper-materials`
@@ -43,12 +43,13 @@ Closed milestones:
 - `Stage 0 - Reproduction`
 - `Stage 1 - Intent-MPC Data Flow`
 - `Stage 2 - Experiment Logging`
+- `Stage 3 - Perception Degradation`
 
 Current active milestone:
 
-- `Stage 3 - Perception Degradation`
+- `Stage 4 - Multimodal Uncertainty`
 
-Stage 3 scope is deliberately limited to an external degraded perception stream. Planner consumption of degraded/uncertain obstacles remains reserved for Stage 5.
+Stage 4 scope is deliberately limited to uncertainty representation and visualization. Planner consumption of `effective_radius` remains reserved for Stage 5.
 
 ## GitHub Issues
 

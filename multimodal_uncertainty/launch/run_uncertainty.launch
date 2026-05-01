@@ -1,0 +1,16 @@
+<launch>
+  <arg name="output_dir" default="$(env HOME)/catkin_ws/experiment_logs" />
+  <arg name="alpha" default="1.0" />
+  <arg name="beta" default="0.5" />
+  <arg name="gamma" default="0.002" />
+  <arg name="delta" default="0.8" />
+
+  <node pkg="multimodal_uncertainty" type="uncertainty_obstacle_node.py" name="uncertainty_obstacle_node" output="screen">
+    <rosparam file="$(find multimodal_uncertainty)/config/stage4_default.yaml" />
+    <param name="output_dir" value="$(arg output_dir)" />
+    <param name="alpha" value="$(arg alpha)" />
+    <param name="beta" value="$(arg beta)" />
+    <param name="gamma" value="$(arg gamma)" />
+    <param name="delta" value="$(arg delta)" />
+  </node>
+</launch>

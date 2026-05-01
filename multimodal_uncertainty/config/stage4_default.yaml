@@ -1,0 +1,21 @@
+input_obstacles_topic: "/perception_degradation/degraded_obstacles"
+uncertainty_obstacles_topic: "/multimodal_uncertainty/uncertainty_obstacles"
+marker_topic: "/multimodal_uncertainty/uncertainty_markers"
+frame_id: "map"
+
+uncertainty_model: "radius_inflation_v1"
+source_modalities_override: ""
+
+alpha: 1.0
+beta: 0.5
+gamma: 0.002
+delta: 0.8
+
+min_position_uncertainty: 0.0
+min_velocity_uncertainty: 0.0
+min_effective_radius: 0.05
+max_effective_radius: 10.0
+
+write_csv: true
+output_dir: ""
+output_csv: "stage4_uncertainty_obstacles.csv"

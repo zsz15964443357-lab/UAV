@@ -18,6 +18,53 @@ Camera / RGB-D / LiDAR
 实验评估：成功率、碰撞率、最小安全距离、规划耗时、鲁棒性曲线
 ```
 
+
+## 多模态部分：具体采用的模态与融合方式
+
+本课题采用**障碍物级多模态融合**，不是以端到端多模态大模型作为主线。多模态的作用是为动态障碍物提供更可靠的状态估计和不确定性表达，最终服务于安全局部规划。
+
+主要模态：
+
+- **LiDAR**：提供动态障碍物的三维位置、距离、几何尺寸、点云数量和空间置信度。优势是几何定位更可靠，缺点是点云稀疏、语义信息弱。
+- **RGB-D / Camera**：提供 2D bbox、深度图距离、视觉检测置信度、语义类别和近距离跟踪信息。优势是语义信息强、近距离观测密集，缺点是受光照、遮挡、深度缺失和视野限制影响明显。
+
+融合后的统一障碍物状态，输入来自伪多模态观测或 LV-DOT / onboard_detector：
+
+```text
+Obstacle {
+  position          # 3D position from LiDAR/RGB-D fusion
+  velocity          # estimated dynamic obstacle velocity
+  radius            # physical obstacle radius or bbox-derived radius
+  confidence        # fused detection/tracking confidence
+  covariance        # position/velocity uncertainty
+  source_modalities # lidar / rgbd / camera / fused
+  effective_radius  # planning safety radius after uncertainty inflation
+}
+```
+
+最小可行实现分两步：
+
+1. **伪多模态阶段**：先从仿真 ground truth 生成两个受控观测源。
+   - `pseudo_lidar_observation`：位置噪声较小，但点云稀疏时可能漏检，语义信息弱。
+   - `pseudo_rgbd_observation`：近距离较准，远距离噪声更大，有 FOV 限制、检测置信度和漏检概率。
+2. **真实感知接入阶段**：后续接入 LV-DOT / onboard_detector，将真实 LiDAR、RGB-D 或 Camera 的动态障碍物检测与跟踪结果转成上述统一状态。
+
+多模态融合结果不直接作为论文终点，而是进入不确定性建模：
+
+```text
+LiDAR observation + RGB-D / Camera observation
+        ↓
+obstacle-level fusion
+        ↓
+position + velocity + confidence + covariance
+        ↓
+effective_radius / obstacle prediction tube
+        ↓
+uncertainty-aware safe local planning
+```
+
+因此，本课题的核心问题是：**当 LiDAR 与 RGB-D / Camera 的观测存在噪声、延迟、漏检或模态冲突时，规划器如何根据融合置信度和不确定性仍然保持安全避障。**
+
 ## 阶段 0：复现主线平台
 
 目标：跑通 Intent-MPC 官方 demo，建立可复现实验环境。
@@ -110,9 +157,9 @@ planner
 
 ## 阶段 4：加入多模态不确定性表示
 
-目标：把多模态感知结果转化为可供规划使用的风险表达。
+目标：把 LiDAR 与 RGB-D / Camera 的障碍物级融合结果转化为可供规划使用的风险表达。
 
-统一障碍物状态：
+统一障碍物状态，输入来自伪多模态观测或 LV-DOT / onboard_detector：
 
 ```text
 Obstacle {

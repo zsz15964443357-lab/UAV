@@ -1,0 +1,48 @@
+<launch>
+	<arg name="position_noise_std" default="0.1" />
+	<arg name="velocity_noise_std" default="0.2" />
+	<arg name="delay_ms" default="100.0" />
+	<arg name="dropout_prob" default="0.0" />
+	<arg name="false_positive_prob" default="0.0" />
+	<arg name="confidence_noise" default="0.1" />
+	<arg name="random_seed" default="1" />
+	<arg name="alpha" default="1.0" />
+	<arg name="beta" default="0.5" />
+	<arg name="gamma" default="0.002" />
+	<arg name="delta" default="0.8" />
+	<arg name="output_dir" default="$(env HOME)/catkin_ws/experiment_logs" />
+
+	<rosparam file="$(find tracking_controller)/cfg/controller_param.yaml" ns="controller"/>
+	<rosparam file="$(find autonomous_flight)/cfg/mpc_navigation/fake_detector_param.yaml" />
+	<rosparam file="$(find autonomous_flight)/cfg/mpc_navigation/flight_base.yaml" ns="autonomous_flight"/>
+	<rosparam file="$(find autonomous_flight)/cfg/mpc_navigation/planner_param.yaml" />
+	<rosparam file="$(find autonomous_flight)/cfg/mpc_navigation/mapping_param.yaml" ns="/dynamic_map" />
+	<rosparam file="$(find autonomous_flight)/cfg/mpc_navigation/dynamic_detector_param.yaml" ns="/onboard_detector" />
+	<rosparam file="$(find autonomous_flight)/cfg/mpc_navigation/predictor_param.yaml" ns="/dynamic_predictor" />
+
+	<param name="autonomous_flight/dynamic_obstacle_mode" value="uncertainty_aware" />
+	<param name="autonomous_flight/uncertainty_obstacles_topic" value="/multimodal_uncertainty/uncertainty_obstacles" />
+	<param name="autonomous_flight/uncertainty_size_mode" value="scale_radius" />
+	<param name="autonomous_flight/uncertainty_max_age" value="0.5" />
+	<param name="autonomous_flight/uncertainty_association_distance" value="2.0" />
+	<param name="autonomous_flight/uncertainty_fallback_to_original" value="true" />
+
+	<include file="$(find multimodal_uncertainty)/launch/run_stage4_pipeline.launch">
+		<arg name="output_dir" value="$(arg output_dir)" />
+		<arg name="position_noise_std" value="$(arg position_noise_std)" />
+		<arg name="velocity_noise_std" value="$(arg velocity_noise_std)" />
+		<arg name="delay_ms" value="$(arg delay_ms)" />
+		<arg name="dropout_prob" value="$(arg dropout_prob)" />
+		<arg name="false_positive_prob" value="$(arg false_positive_prob)" />
+		<arg name="confidence_noise" value="$(arg confidence_noise)" />
+		<arg name="random_seed" value="$(arg random_seed)" />
+		<arg name="alpha" value="$(arg alpha)" />
+		<arg name="beta" value="$(arg beta)" />
+		<arg name="gamma" value="$(arg gamma)" />
+		<arg name="delta" value="$(arg delta)" />
+	</include>
+
+	<node pkg="tracking_controller" type="tracking_controller_node" name="tracking_controller_node" output="screen" />
+	<node pkg="autonomous_flight" type="mpc_navigation_node" name="mpc_navigation_node" output="screen" />
+	<include file="$(find remote_control)/launch/mpc_navigation_fast_rviz.launch" />
+</launch>

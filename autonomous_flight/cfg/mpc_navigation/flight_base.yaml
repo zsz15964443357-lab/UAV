@@ -14,3 +14,14 @@ use_predefined_goal: true
 predefined_goal_directory: "/cfg/mpc_navigation/ref_trajectory.txt"
 execute_path_times: 10 # how many times to repeat the trajectory 
 
+# Stage 5 dynamic obstacle planning mode:
+# - original: official Intent-MPC behavior
+# - fixed_margin: inflate dynamic obstacle dimensions by fixed_safety_margin before MPC
+# - uncertainty_aware: use /multimodal_uncertainty/uncertainty_obstacles effective_radius when fresh
+dynamic_obstacle_mode: "original"
+fixed_safety_margin: 0.0
+uncertainty_obstacles_topic: "/multimodal_uncertainty/uncertainty_obstacles"
+uncertainty_size_mode: "scale_radius" # scale_radius or add_margin
+uncertainty_max_age: 0.5
+uncertainty_association_distance: 2.0
+uncertainty_fallback_to_original: true

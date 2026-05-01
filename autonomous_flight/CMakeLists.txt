@@ -21,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
   tracking_controller
   time_optimizer
   dynamic_predictor
+  multimodal_uncertainty
 )
 
 ## System dependencies are found with CMake's conventions

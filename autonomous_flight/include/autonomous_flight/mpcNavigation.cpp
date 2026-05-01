@@ -5,6 +5,10 @@
 */
 #include <autonomous_flight/mpcNavigation.h>
 
+#include <algorithm>
+#include <cmath>
+#include <limits>
+
 namespace AutoFlight{
 	mpcNavigation::mpcNavigation(const ros::NodeHandle& nh) : flightBase(nh){
 		this->initParam();
@@ -120,7 +124,48 @@ namespace AutoFlight{
 		else{
 			cout << "[AutoFlight]: Execute path number of times is set to: " << this->repeatPathNum_ << "." << endl;
 		}	
-		
+
+		if (not this->nh_.getParam("autonomous_flight/dynamic_obstacle_mode", this->dynamicObstacleMode_)){
+			this->dynamicObstacleMode_ = "original";
+			cout << "[AutoFlight]: No dynamic obstacle mode param found. Use default: original." << endl;
+		}
+		if (this->dynamicObstacleMode_ != "original" and this->dynamicObstacleMode_ != "fixed_margin" and this->dynamicObstacleMode_ != "uncertainty_aware"){
+			cout << "[AutoFlight]: Unknown dynamic obstacle mode " << this->dynamicObstacleMode_ << ". Use original." << endl;
+			this->dynamicObstacleMode_ = "original";
+		}
+		cout << "[AutoFlight]: Dynamic obstacle mode is set to: " << this->dynamicObstacleMode_ << "." << endl;
+
+		if (not this->nh_.getParam("autonomous_flight/fixed_safety_margin", this->fixedSafetyMargin_)){
+			this->fixedSafetyMargin_ = 0.0;
+		}
+		this->fixedSafetyMargin_ = std::max(0.0, this->fixedSafetyMargin_);
+		cout << "[AutoFlight]: Fixed dynamic obstacle safety margin: " << this->fixedSafetyMargin_ << "m." << endl;
+
+		if (not this->nh_.getParam("autonomous_flight/uncertainty_obstacles_topic", this->uncertaintyObstaclesTopic_)){
+			this->uncertaintyObstaclesTopic_ = "/multimodal_uncertainty/uncertainty_obstacles";
+		}
+		if (not this->nh_.getParam("autonomous_flight/uncertainty_size_mode", this->uncertaintySizeMode_)){
+			this->uncertaintySizeMode_ = "scale_radius";
+		}
+		if (this->uncertaintySizeMode_ != "scale_radius" and this->uncertaintySizeMode_ != "add_margin"){
+			cout << "[AutoFlight]: Unknown uncertainty size mode " << this->uncertaintySizeMode_ << ". Use scale_radius." << endl;
+			this->uncertaintySizeMode_ = "scale_radius";
+		}
+		if (not this->nh_.getParam("autonomous_flight/uncertainty_max_age", this->uncertaintyMaxAge_)){
+			this->uncertaintyMaxAge_ = 0.5;
+		}
+		this->uncertaintyMaxAge_ = std::max(0.0, this->uncertaintyMaxAge_);
+		if (not this->nh_.getParam("autonomous_flight/uncertainty_association_distance", this->uncertaintyAssociationDistance_)){
+			this->uncertaintyAssociationDistance_ = 2.0;
+		}
+		this->uncertaintyAssociationDistance_ = std::max(0.0, this->uncertaintyAssociationDistance_);
+		if (not this->nh_.getParam("autonomous_flight/uncertainty_fallback_to_original", this->uncertaintyFallbackToOriginal_)){
+			this->uncertaintyFallbackToOriginal_ = true;
+		}
+		cout << "[AutoFlight]: Uncertainty obstacle topic: " << this->uncertaintyObstaclesTopic_
+			 << ", size mode: " << this->uncertaintySizeMode_
+			 << ", max age: " << this->uncertaintyMaxAge_
+			 << "s, association distance: " << this->uncertaintyAssociationDistance_ << "m." << endl;
 
 	}
 
@@ -175,6 +220,10 @@ namespace AutoFlight{
 	void mpcNavigation::registerCallback(){
 		this->mpcWorker_ = std::thread(&mpcNavigation::mpcCB, this);
 		this->mpcWorker_.detach();
+
+		if (this->isUncertaintyAwareMode()){
+			this->uncertaintyObstacleSub_ = this->nh_.subscribe(this->uncertaintyObstaclesTopic_, 10, &mpcNavigation::uncertaintyObstaclesCB, this);
+		}
 
 		// collision check callback
 		this->replanCheckTimer_ = this->nh_.createTimer(ros::Duration(0.01), &mpcNavigation::replanCheckCB, this);
@@ -295,18 +344,12 @@ namespace AutoFlight{
 						std::vector<std::vector<std::vector<Eigen::Vector3d>>> predPos, predSize;
 						std::vector<Eigen::VectorXd> intentProb;
 						this->predictor_->getPrediction(predPos, predSize, intentProb);
+						this->applyPlannerModeToPredictions(predPos, predSize);
 						this->mpc_->updatePredObstacles(predPos, predSize, intentProb);
 					}
 					else{
 						std::vector<Eigen::Vector3d> obstaclesPos, obstaclesVel, obstaclesSize;
-						if (this->useFakeDetector_){
-							Eigen::Vector3d robotSize;
-							this->map_->getRobotSize(robotSize);
-							this->getDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize, robotSize);
-						}
-						else{ 
-							this->map_->getDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize);
-						}
+						this->getPlannerDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize);
 						this->mpc_->updateDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize);
 					}
 
@@ -658,14 +701,7 @@ namespace AutoFlight{
 
 		if (trajectoryReady){
 			std::vector<Eigen::Vector3d> obstaclesPos, obstaclesVel, obstaclesSize;
-			if (this->useFakeDetector_){
-				Eigen::Vector3d robotSize;
-				this->map_->getRobotSize(robotSize);
-				this->getDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize, robotSize);
-			}
-			else{ 
-				this->map_->getDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize);
-			}
+			this->getPlannerDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize);
 			double dt = this->mpc_->getTs();
 			ros::Time currTime = ros::Time::now();
 			double startTime = std::min(1.0, (currTime-this->trajStartTime_).toSec());
@@ -699,6 +735,183 @@ namespace AutoFlight{
 			obstaclesVel.push_back(vel);
 			obstaclesSize.push_back(size);
 		}
+	}
+
+	bool mpcNavigation::isFixedMarginMode(){
+		return this->dynamicObstacleMode_ == "fixed_margin";
+	}
+
+	bool mpcNavigation::isUncertaintyAwareMode(){
+		return this->dynamicObstacleMode_ == "uncertainty_aware";
+	}
+
+	void mpcNavigation::uncertaintyObstaclesCB(const multimodal_uncertainty::UncertaintyObstacleArrayConstPtr& msg){
+		std::lock_guard<std::mutex> lock(this->uncertaintyObstacleMutex_);
+		this->latestUncertaintyObstacles_ = *msg;
+		this->lastUncertaintyObstacleTime_ = ros::Time::now();
+		this->uncertaintyObstaclesReady_ = true;
+	}
+
+	bool mpcNavigation::getLatestUncertaintyObstacles(multimodal_uncertainty::UncertaintyObstacleArray& msg){
+		std::lock_guard<std::mutex> lock(this->uncertaintyObstacleMutex_);
+		if (not this->uncertaintyObstaclesReady_){
+			return false;
+		}
+		double age = (ros::Time::now() - this->lastUncertaintyObstacleTime_).toSec();
+		if (age > this->uncertaintyMaxAge_){
+			ROS_WARN_THROTTLE(1.0, "[AutoFlight]: Uncertainty obstacle message is stale: %.3fs.", age);
+			return false;
+		}
+		msg = this->latestUncertaintyObstacles_;
+		return true;
+	}
+
+	bool mpcNavigation::getUncertaintyDynamicObstacles(std::vector<Eigen::Vector3d>& obstaclesPos, std::vector<Eigen::Vector3d>& obstaclesVel, std::vector<Eigen::Vector3d>& obstaclesSize){
+		multimodal_uncertainty::UncertaintyObstacleArray msg;
+		if (not this->getLatestUncertaintyObstacles(msg)){
+			return false;
+		}
+		obstaclesPos.clear();
+		obstaclesVel.clear();
+		obstaclesSize.clear();
+		for (const auto& ob : msg.obstacles){
+			Eigen::Vector3d pos(ob.position.x, ob.position.y, ob.position.z);
+			Eigen::Vector3d vel(ob.velocity.x, ob.velocity.y, ob.velocity.z);
+			Eigen::Vector3d size(ob.size.x, ob.size.y, ob.size.z);
+			if (not (std::isfinite(pos(0)) and std::isfinite(pos(1)) and std::isfinite(pos(2)) and
+					 std::isfinite(vel(0)) and std::isfinite(vel(1)) and std::isfinite(vel(2)) and
+					 std::isfinite(size(0)) and std::isfinite(size(1)) and std::isfinite(size(2)))){
+				continue;
+			}
+			size = this->inflateSizeByEffectiveRadius(size, ob.radius, ob.effective_radius);
+			obstaclesPos.push_back(pos);
+			obstaclesVel.push_back(vel);
+			obstaclesSize.push_back(size);
+		}
+		return true;
+	}
+
+	void mpcNavigation::getPlannerDynamicObstacles(std::vector<Eigen::Vector3d>& obstaclesPos, std::vector<Eigen::Vector3d>& obstaclesVel, std::vector<Eigen::Vector3d>& obstaclesSize){
+		obstaclesPos.clear();
+		obstaclesVel.clear();
+		obstaclesSize.clear();
+		if (this->isUncertaintyAwareMode()){
+			if (this->getUncertaintyDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize)){
+				return;
+			}
+			if (not this->uncertaintyFallbackToOriginal_){
+				ROS_WARN_THROTTLE(1.0, "[AutoFlight]: No fresh uncertainty obstacles; planner obstacle set is empty by configuration.");
+				return;
+			}
+		}
+
+		if (this->useFakeDetector_){
+			Eigen::Vector3d robotSize;
+			this->map_->getRobotSize(robotSize);
+			this->getDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize, robotSize);
+		}
+		else{
+			this->map_->getDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize);
+		}
+		if (this->isFixedMarginMode()){
+			this->inflateCurrentObstacleSizes(obstaclesSize);
+		}
+	}
+
+	void mpcNavigation::inflateCurrentObstacleSizes(std::vector<Eigen::Vector3d>& obstaclesSize){
+		for (auto& size : obstaclesSize){
+			size = this->inflateSizeByFixedMargin(size);
+		}
+	}
+
+	void mpcNavigation::applyPlannerModeToPredictions(std::vector<std::vector<std::vector<Eigen::Vector3d>>>& predPos, std::vector<std::vector<std::vector<Eigen::Vector3d>>>& predSize){
+		if (this->isFixedMarginMode()){
+			this->inflatePredictedObstacleSizes(predSize);
+			return;
+		}
+		if (not this->isUncertaintyAwareMode()){
+			return;
+		}
+		multimodal_uncertainty::UncertaintyObstacleArray uncertaintyMsg;
+		if (not this->getLatestUncertaintyObstacles(uncertaintyMsg)){
+			if (not this->uncertaintyFallbackToOriginal_){
+				predPos.clear();
+				predSize.clear();
+			}
+			return;
+		}
+		for (size_t i=0; i<predPos.size() and i<predSize.size(); ++i){
+			Eigen::Vector3d refPos;
+			bool hasRefPos = false;
+			for (const auto& branch : predPos[i]){
+				if (not branch.empty()){
+					refPos = branch.front();
+					hasRefPos = true;
+					break;
+				}
+			}
+			if (not hasRefPos){
+				continue;
+			}
+			int matchIdx = -1;
+			if (not this->findUncertaintyMatch(refPos, uncertaintyMsg, matchIdx)){
+				continue;
+			}
+			const auto& uncertaintyOb = uncertaintyMsg.obstacles[matchIdx];
+			for (auto& branchSize : predSize[i]){
+				for (auto& size : branchSize){
+					size = this->inflateSizeByEffectiveRadius(size, uncertaintyOb.radius, uncertaintyOb.effective_radius);
+				}
+			}
+		}
+	}
+
+	void mpcNavigation::inflatePredictedObstacleSizes(std::vector<std::vector<std::vector<Eigen::Vector3d>>>& predSize){
+		for (auto& obstacleSize : predSize){
+			for (auto& branchSize : obstacleSize){
+				for (auto& size : branchSize){
+					size = this->inflateSizeByFixedMargin(size);
+				}
+			}
+		}
+	}
+
+	bool mpcNavigation::findUncertaintyMatch(const Eigen::Vector3d& pos, const multimodal_uncertainty::UncertaintyObstacleArray& uncertaintyMsg, int& matchIdx){
+		matchIdx = -1;
+		double bestDist = std::numeric_limits<double>::infinity();
+		for (int i=0; i<int(uncertaintyMsg.obstacles.size()); ++i){
+			const auto& ob = uncertaintyMsg.obstacles[i];
+			Eigen::Vector3d uncertaintyPos(ob.position.x, ob.position.y, ob.position.z);
+			double dist = (pos - uncertaintyPos).norm();
+			if (dist < bestDist){
+				bestDist = dist;
+				matchIdx = i;
+			}
+		}
+		return matchIdx >= 0 and bestDist <= this->uncertaintyAssociationDistance_;
+	}
+
+	Eigen::Vector3d mpcNavigation::inflateSizeByFixedMargin(const Eigen::Vector3d& size){
+		if (this->fixedSafetyMargin_ <= 0.0){
+			return size;
+		}
+		return size + Eigen::Vector3d::Constant(2.0 * this->fixedSafetyMargin_);
+	}
+
+	Eigen::Vector3d mpcNavigation::inflateSizeByEffectiveRadius(const Eigen::Vector3d& size, double radius, double effectiveRadius){
+		if (not std::isfinite(effectiveRadius) or effectiveRadius <= 0.0){
+			return size;
+		}
+		double safeRadius = radius;
+		if (not std::isfinite(safeRadius) or safeRadius <= 1e-3){
+			safeRadius = std::max(0.5 * size.norm(), 1e-3);
+		}
+		if (this->uncertaintySizeMode_ == "add_margin"){
+			double margin = std::max(0.0, effectiveRadius - safeRadius);
+			return size + Eigen::Vector3d::Constant(2.0 * margin);
+		}
+		double scale = std::max(1.0, effectiveRadius / safeRadius);
+		return size * scale;
 	}
 
 	void mpcNavigation::publishGoal(){

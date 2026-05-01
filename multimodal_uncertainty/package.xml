@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>multimodal_uncertainty</name>
+  <version>0.1.0</version>
+  <description>Obstacle-level uncertainty representation for multimodal UAV planning experiments.</description>
+  <maintainer email="zsz15964443357@users.noreply.github.com">zsz15964443357-lab</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>visualization_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>perception_degradation</build_depend>
+
+  <build_export_depend>rospy</build_export_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <build_export_depend>geometry_msgs</build_export_depend>
+  <build_export_depend>perception_degradation</build_export_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>perception_degradation</exec_depend>
+
+  <export>
+  </export>
+</package>

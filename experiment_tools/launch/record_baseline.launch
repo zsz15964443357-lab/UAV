@@ -1,0 +1,29 @@
+<launch>
+  <arg name="scenario_name" default="generated_env" />
+  <arg name="method_name" default="intent_mpc_baseline" />
+  <arg name="run_id" default="" />
+  <arg name="output_dir" default="$(env HOME)/catkin_ws/experiment_logs" />
+
+  <arg name="position_noise_std" default="0.0" />
+  <arg name="velocity_noise_std" default="0.0" />
+  <arg name="delay_ms" default="0.0" />
+  <arg name="dropout_prob" default="0.0" />
+  <arg name="false_positive_prob" default="0.0" />
+  <arg name="confidence_noise" default="0.0" />
+  <arg name="random_seed" default="0" />
+
+  <node pkg="experiment_tools" type="experiment_metric_recorder.py" name="experiment_metric_recorder" output="screen">
+    <rosparam file="$(find experiment_tools)/config/stage2_default.yaml" />
+    <param name="scenario_name" value="$(arg scenario_name)" />
+    <param name="method_name" value="$(arg method_name)" />
+    <param name="run_id" value="$(arg run_id)" />
+    <param name="output_dir" value="$(arg output_dir)" />
+    <param name="position_noise_std" value="$(arg position_noise_std)" />
+    <param name="velocity_noise_std" value="$(arg velocity_noise_std)" />
+    <param name="delay_ms" value="$(arg delay_ms)" />
+    <param name="dropout_prob" value="$(arg dropout_prob)" />
+    <param name="false_positive_prob" value="$(arg false_positive_prob)" />
+    <param name="confidence_noise" value="$(arg confidence_noise)" />
+    <param name="random_seed" value="$(arg random_seed)" />
+  </node>
+</launch>

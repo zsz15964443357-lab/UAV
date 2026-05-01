@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>experiment_tools</name>
+  <version>0.1.0</version>
+  <description>Experiment logging and offline analysis tools for Intent-MPC reproduction studies.</description>
+  <maintainer email="zsz15964443357@users.noreply.github.com">zsz15964443357-lab</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>rospy</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>gazebo_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>gazebo_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <export>
+  </export>
+</package>

@@ -1,0 +1,34 @@
+scenario_name: generated_env
+method_name: intent_mpc_baseline
+run_id: ""
+notes: "stage2 baseline logging"
+
+position_noise_std: 0.0
+velocity_noise_std: 0.0
+delay_ms: 0.0
+dropout_prob: 0.0
+false_positive_prob: 0.0
+confidence_noise: 0.0
+random_seed: 0
+
+odom_topic: "/CERLAB/quadcopter/odom"
+model_states_topic: "/gazebo/model_states"
+planning_time_topic: ""
+target_prefixes: ["person", "dynamic_box", "dynamic_cylinder"]
+
+distance_mode: "3d"
+robot_radius: 0.35
+collision_threshold: 0.0
+max_odom_step: 5.0
+
+success_mode: "duration"
+success_min_duration: 30.0
+success_min_path_length: 0.0
+goal_position: []
+goal_tolerance: 0.5
+
+output_dir: ""
+output_csv: ""
+sample_csv: ""
+write_sample_csv: true
+sample_period: 0.5

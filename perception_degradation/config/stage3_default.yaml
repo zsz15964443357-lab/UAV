@@ -1,0 +1,32 @@
+input_model_states_topic: "/gazebo/model_states"
+odom_topic: "/CERLAB/quadcopter/odom"
+degraded_obstacles_topic: "/perception_degradation/degraded_obstacles"
+marker_topic: "/perception_degradation/degraded_obstacle_markers"
+frame_id: "map"
+
+target_prefixes: ["person", "dynamic_box", "dynamic_cylinder"]
+source_modalities: "pseudo_multimodal_degraded"
+publish_rate: 10.0
+
+position_noise_std: 0.0
+velocity_noise_std: 0.0
+delay_ms: 0.0
+dropout_prob: 0.0
+false_positive_prob: 0.0
+confidence_noise: 0.0
+random_seed: 0
+base_confidence: 1.0
+min_confidence: 0.0
+max_confidence: 1.0
+
+false_positive_size: [0.5, 0.5, 1.8]
+false_positive_velocity_std: 0.2
+false_positive_radius_around_uav: 6.0
+false_positive_z_range: [0.6, 1.8]
+world_x_range: [-8.0, 8.0]
+world_y_range: [-8.0, 8.0]
+max_false_positives_per_tick: 1
+
+write_csv: true
+output_dir: ""
+output_csv: "stage3_degraded_obstacles.csv"

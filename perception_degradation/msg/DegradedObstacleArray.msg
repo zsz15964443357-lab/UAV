@@ -1,0 +1,5 @@
+std_msgs/Header header
+DegradedObstacle[] obstacles
+uint32 raw_obstacle_count
+uint32 dropped_obstacle_count
+uint32 false_positive_count

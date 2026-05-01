@@ -65,6 +65,11 @@ class ExperimentMetricRecorder:
         configured_run_id = rospy.get_param("~run_id", "")
         self.run_id = configured_run_id or self.make_run_id()
         self.notes = rospy.get_param("~notes", "")
+        self.world_name = rospy.get_param("~world_name", "")
+        self.planner_mode = rospy.get_param("~planner_mode", "")
+        self.fixed_safety_margin = as_float(rospy.get_param("~fixed_safety_margin", 0.0))
+        self.degradation_axis = rospy.get_param("~degradation_axis", "clean")
+        self.degradation_value = rospy.get_param("~degradation_value", "0")
 
         self.position_noise_std = as_float(rospy.get_param("~position_noise_std", 0.0))
         self.velocity_noise_std = as_float(rospy.get_param("~velocity_noise_std", 0.0))
@@ -307,6 +312,11 @@ class ExperimentMetricRecorder:
             "ros_time_end",
             "scenario_name",
             "method_name",
+            "world_name",
+            "planner_mode",
+            "fixed_safety_margin",
+            "degradation_axis",
+            "degradation_value",
             "position_noise_std",
             "velocity_noise_std",
             "delay_ms",
@@ -375,6 +385,11 @@ class ExperimentMetricRecorder:
             "ros_time_end": self.end_ros_time if self.end_ros_time is not None else "",
             "scenario_name": self.scenario_name,
             "method_name": self.method_name,
+            "world_name": self.world_name,
+            "planner_mode": self.planner_mode,
+            "fixed_safety_margin": self.fixed_safety_margin,
+            "degradation_axis": self.degradation_axis,
+            "degradation_value": self.degradation_value,
             "position_noise_std": self.position_noise_std,
             "velocity_noise_std": self.velocity_noise_std,
             "delay_ms": self.delay_ms,

@@ -15,8 +15,8 @@ The `main` branch currently stores the high-level research plan. The reproductio
 - `stage3-perception-degradation`: stage 3 perception degradation node, degraded obstacle messages, RViz markers, and CSV samples.
 - `stage4-multimodal-uncertainty`: stage 4 uncertainty obstacle messages, effective-radius calculation, RViz risk radius markers, and CSV samples.
 - `stage5-safety-local-planner`: stage 5 planner integration for original, fixed-margin, and uncertainty-aware dynamic obstacle modes.
+- `stage6-paper-experiment-matrix`: stage 6 experiment matrix, headless batch runner, summary tables, and robustness curves.
 - Future branches:
-  - `stage6-paper-experiment-matrix`
   - `stage7-paper-materials`
 
 Each stage should end with:
@@ -46,12 +46,13 @@ Closed milestones:
 - `Stage 3 - Perception Degradation`
 - `Stage 4 - Multimodal Uncertainty`
 - `Stage 5 - Safety Local Planner`
+- `Stage 6 - Paper Experiment Matrix`
 
 Current active milestone:
 
-- `Stage 6 - Paper Experiment Matrix`
+- `Stage 7 - Paper Materials`
 
-Stage 5 implemented dynamic-obstacle size inflation for fixed-margin and uncertainty-aware modes. Risk-cost terms inside MPC remain a later refinement after validating the radius-inflation baseline.
+Stage 6 implemented the experiment matrix and offline analysis workflow. The full 585-run matrix has not been executed in this branch; only a short pilot run was used to validate the pipeline.
 
 ## GitHub Issues
 

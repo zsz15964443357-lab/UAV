@@ -1,0 +1,89 @@
+# Stage 6 paper experiment matrix.
+#
+# The default matrix is a one-factor robustness sweep:
+# clean baseline plus one degraded perception dimension changed at a time.
+# This avoids the full factorial explosion while still producing paper-ready
+# robustness curves for noise, delay, dropout, and velocity error.
+
+run_duration_sec: 60
+include_axis_zero: false
+
+launch:
+  sim_pkg: uav_simulator
+  sim_launch: start_stage6.launch
+  planner_pkg: autonomous_flight
+  planner_launch: intent_mpc_demo_stage6.launch
+  recorder_pkg: experiment_tools
+  recorder_launch: record_stage6.launch
+
+methods:
+  - name: intent_mpc
+    enabled: true
+    planner_mode: original
+    fixed_safety_margin: 0.0
+    enable_uncertainty_pipeline: false
+
+  - name: intent_mpc_fixed_margin
+    enabled: true
+    planner_mode: fixed_margin
+    fixed_safety_margin: 0.3
+    enable_uncertainty_pipeline: false
+
+  - name: uncertainty_aware_intent_mpc
+    enabled: true
+    planner_mode: uncertainty_aware
+    fixed_safety_margin: 0.0
+    enable_uncertainty_pipeline: true
+
+  # Future comparison target. Disabled until a NavRL launch integration exists.
+  - name: navrl
+    enabled: false
+    planner_mode: navrl
+    fixed_safety_margin: 0.0
+    enable_uncertainty_pipeline: false
+
+  # Future comparison target. Disabled until a NavRL safety-shield integration exists.
+  - name: navrl_safety_shield
+    enabled: false
+    planner_mode: navrl_safety_shield
+    fixed_safety_margin: 0.0
+    enable_uncertainty_pipeline: true
+
+scenarios:
+  - name: single_dynamic_crossing
+    world_name: $(find uav_simulator)/worlds/simple_box/simple_box_dynamic_3.world
+
+  - name: head_on_corridor
+    world_name: $(find uav_simulator)/worlds/corridor/corridor_dynamic_9.world
+
+  - name: multi_obstacle_crossing
+    world_name: $(find uav_simulator)/worlds/square/square_dynamic_7.world
+
+  - name: sudden_occlusion_floorplan
+    world_name: $(find uav_simulator)/worlds/floorplan3/floorplan3_box_dynamic_4.world
+
+  - name: narrow_passage_meeting
+    world_name: $(find uav_simulator)/worlds/tunnel/tunnel_straight_dynamic_5.world
+
+seeds: [0, 1, 2]
+
+degradation_defaults:
+  position_noise_std: 0.0
+  velocity_noise_std: 0.0
+  delay_ms: 0.0
+  dropout_prob: 0.0
+  false_positive_prob: 0.0
+  confidence_noise: 0.0
+
+degradation_sweeps:
+  - axis: position_noise_std
+    values: [0.0, 0.1, 0.2, 0.3]
+
+  - axis: delay_ms
+    values: [0.0, 100.0, 200.0, 300.0]
+
+  - axis: dropout_prob
+    values: [0.0, 0.1, 0.3, 0.5]
+
+  - axis: velocity_noise_std
+    values: [0.0, 0.2, 0.5, 1.0]

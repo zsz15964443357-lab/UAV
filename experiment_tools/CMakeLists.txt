@@ -14,6 +14,9 @@ catkin_install_python(PROGRAMS
   scripts/experiment_metric_recorder.py
   scripts/summarize_runs.py
   scripts/plot_metrics.py
+  scripts/generate_stage6_manifest.py
+  scripts/run_stage6_batch.py
+  scripts/analyze_stage6_results.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
